@@ -56,23 +56,23 @@ declare class Lockfile {
   static fromDirectory(dir: string, reporter?: Reporter): Lockfile;
 
   getLocked(pattern: string): LockManifest | undefined;
-  removePattern(pattern: string);
+  removePattern(pattern: string): void;
 
   //getLockfile(patterns: { [packagePattern: string]: Manifest; }): LockfileObject;
 }
 export default Lockfile;
 
+declare type RegistryNames = 'npm' | 'yarn';
+
 declare interface Reporter {
   lang(key: string, ...args: any[]): string;
 
   // a error message has been triggered. this however does not always meant an abrupt program end.
-  error(message: string);
+  error(message: string): void;
   // an info message has been triggered. this provides things like stats and diagnostics.
-  info(message: string);
+  info(message: string): void;
   // a warning message has been triggered.
-  warn(message: string);
-  // a success message has been triggered.
-  success(message: string);
+  warn(message: string): void;
   // a simple log message
-  log(message: string, opts?: { force?: boolean });
+  log(message: string, opts?: { force?: boolean }): void;
 }
