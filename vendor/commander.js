@@ -387,17 +387,15 @@ Command.prototype.normalize = function(args) {
 };
 
 Command.prototype.parseArgs = function(args, unknown) {
-  var name;
-
   if (args.length) {
-    name = args[0];
+    var name = args[0];
     this.emit(this.listeners('command:' + name).length ? 'command:' + args.shift() : 'command:*', args, unknown);
   } else {
     outputHelpIfRequested(this, unknown);
 
     unknown.length > 0 && !this.defaultExecutable && this.unknownOption(unknown[0]);
-    0 === this.commands.length && 0 === this._args.filter((a) => a.required).length &&
-      this.emit('command:*');
+    0 === this.commands.length &&
+      (this._args.filter((a) => a.required).length > 0 ? this.outputHelp() : this.emit('command:*'));
   }
 
   return this;
