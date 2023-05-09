@@ -1,6 +1,10 @@
 #!/usr/bin/env node
 'use strict';
 
+try {
+  require('../vendor/v8-compile-cache.js');
+} catch (__) {}
+
 var fs = require('fs'),
   lockfile = require('../vendor/lockfile'),
   program = require('../vendor/commander'),
