@@ -7,7 +7,7 @@ declare type ParseResultType = 'success' | 'merge' | 'conflict';
 
 declare interface ParseResult {
   type: ParseResultType;
-  object: any;
+  object: LockfileObject;
 }
 
 /**
@@ -15,19 +15,19 @@ declare interface ParseResult {
  */
 export function parse(str: string, fileLoc?: string): ParseResult;
 
-export function stringify(obj: any, noHeader?: boolean, enableVersions?: boolean): string;
+export function stringify(obj: LockfileObject, noHeader?: boolean, enableVersions?: boolean): string;
 
 declare interface Dependencies {
   [key: string]: string;
 }
 
 export interface LockManifest {
-  name: string;
+  name?: string;
   version: string;
   resolved?: string;
   integrity?: string;
-  registry: RegistryNames;
-  uid: string;
+  registry?: RegistryNames;
+  uid?: string;
   permissions?: { [key: string]: boolean };
   optionalDependencies?: Dependencies;
   dependencies?: Dependencies;
@@ -42,7 +42,7 @@ export interface LockfileObject {
 //export function explodeEntry(pattern: string, obj: any): LockManifest;
 
 declare class Lockfile {
-  constructor(opts?: { cache?: any; source?: string; parseResultType?: ParseResultType });
+  constructor(opts?: { cache?: LockfileObject; source?: string; parseResultType?: ParseResultType });
 
   // source string if the `cache` was parsed
   source: string;

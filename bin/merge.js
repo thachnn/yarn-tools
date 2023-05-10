@@ -14,41 +14,57 @@ var fs = require('fs'),
 program
   .name('yarn-merge')
   .version(version)
-  .arguments('<lockfile1> <lockfile2> [lockfile3...]')
+  .arguments('<file1> <file2> [fileN...]')
   .description('Merge two or more Yarn lockfiles', {
-    lockfile1: 'base lockfile',
-    lockfile2: 'the second lockfile',
-    lockfile3: 'other lockfiles',
+    file1: 'base lockfile',
+    file2: 'the second lockfile',
+    fileN: 'other lockfiles',
   })
+  .option('-l, --loose', 'interpret version comparisons loosely')
   .option('-o, --output <file>', 'save output to file (default STDOUT)')
   .action(main)
-  .parse(process.argv);
+  .parseAsync(process.argv)
+  .catch(console.error);
 
 /**
  * @param {string} file1
  * @param {string} file2
- * @param {string[]} file3
+ * @param {string[]} [fileN]
+ * @param {program.Command} opts
+ * @returns {Promise}
  */
-function main(file1, file2, file3) {
-  var lockfile1 = parseLockfile(file1);
+function main(file1, file2, fileN, opts) {
+  return new Promise((resolve, reject) => {
+    parseLockfile(file1).then((obj1) => {
+      var it = [];
+      for (var file of [file2].concat(fileN || [])) {
+        it.push(parseLockfile(file).then((obj2) => merge(obj1, obj2, opts.loose), reject));
+      }
 
-  for (var file of [file2].concat(file3 || [])) {
-    var lockfile2 = parseLockfile(file);
-    merge(lockfile1, lockfile2);
-  }
+      Promise.all(it).then(() => {
+        merge.cleanup(obj1);
 
-  var content = lockfile.stringify(lockfile1);
-  !program.output ? console.log(content) : fs.writeFileSync(program.output, content);
+        var content = lockfile.stringify(obj1);
+        !opts.output
+          ? resolve(console.log(content))
+          : fs.writeFile(opts.output, content, (err) => (!err ? resolve() : reject(err)));
+      }, reject);
+    }, reject);
+  });
 }
 
 /**
  * @param {string} file
- * @returns {lockfile.LockfileObject}
+ * @returns {Promise.<lockfile.LockfileObject>}
  */
 function parseLockfile(file) {
-  var content = fs.readFileSync(file, 'utf8'),
-    result = lockfile.parse(content);
-
-  if ('conflict' == result.type) throw new Error('Invalid lockfile: ' + file);
-  return result.object;
+  return new Promise((resolve, reject) => {
+    fs.readFile(file, 'utf8', (err, content) => {
+      if (err) reject(err);
+      else {
+        var result = lockfile.parse(content);
+        'conflict' == result.type ? reject(new Error('Bad lockfile: ' + file)) : resolve(result.object);
+      }
+    });
+  });
 }

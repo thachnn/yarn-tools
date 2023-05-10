@@ -30,5 +30,8 @@
   "license": "MIT",
   "engines": {
     "node": ">= 4.8"
+  },
+  "devDependencies": {
+    "@types/node": "^4.9.0"
   }
 }
