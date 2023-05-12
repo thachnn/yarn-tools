@@ -480,10 +480,7 @@ Command.prototype.variadicArgNotLast = function(name) {
 Command.prototype.version = function(str, flags, description) {
   if (0 === arguments.length) return this._version;
   this._version = str;
-  var versionOption = new Option(
-    (flags = flags || '-V, --version'),
-    (description = description || 'output the version number')
-  );
+  var versionOption = new Option(flags || '-V, --version', description || 'output the version number');
   this._versionOptionName = versionOption.long.substr(2) || 'version';
   this.options.push(versionOption);
   var self = this;

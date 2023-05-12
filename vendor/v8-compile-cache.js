@@ -84,7 +84,7 @@ class FileSystemBlobStore {
   _load() {
     try {
       this._storedBlob = fs.readFileSync(this._blobFilename);
-      this._storedMap = JSON.parse(fs.readFileSync(this._mapFilename));
+      this._storedMap = JSON.parse(fs.readFileSync(this._mapFilename, 'utf8'));
     } catch (e) {
       this._storedBlob = Buffer.alloc(0);
       this._storedMap = {};
@@ -105,9 +105,9 @@ class FileSystemBlobStore {
       offset += buffer.length;
     }
 
-    for (var key of Object.keys(this._memoryBlobs)) {
-      var buffer = this._memoryBlobs[key];
-      push(key, this._invalidationKeys[key], buffer);
+    for (var key1 of Object.keys(this._memoryBlobs)) {
+      var buffer1 = this._memoryBlobs[key1];
+      push(key1, this._invalidationKeys[key1], buffer1);
     }
 
     for (var key of Object.keys(this._storedMap))
@@ -216,12 +216,15 @@ function _mkdirpSync(p, mode) {
     if ('ENOENT' === err0.code) {
       _mkdirpSync(path.dirname(p));
       _mkdirpSync(p);
-    } else
+    } else {
+      var stat;
       try {
-        if (!fs.statSync(p).isDirectory()) throw err0;
+        stat = fs.statSync(p);
       } catch (err1) {
         throw err0;
       }
+      if (!stat.isDirectory()) throw err0;
+    }
   }
 }
 

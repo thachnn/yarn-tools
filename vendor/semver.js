@@ -16,6 +16,7 @@ var MAX_LENGTH = 256,
 
   re = (exports.re = []),
   src = (exports.src = []),
+  /** @type {Object.<string, number>} */
   t = (exports.tokens = {}),
   R = 0;
 
@@ -424,11 +425,11 @@ function rcompare(a, b, loose) {
 }
 exports.sort = sort;
 function sort(list, loose) {
-  return list.sort((a, b) => exports.compareBuild(a, b, loose));
+  return list.sort((a, b) => compareBuild(a, b, loose));
 }
 exports.rsort = rsort;
 function rsort(list, loose) {
-  return list.sort((a, b) => exports.compareBuild(b, a, loose));
+  return list.sort((a, b) => compareBuild(b, a, loose));
 }
 exports.gt = gt;
 function gt(a, b, loose) {
@@ -634,7 +635,7 @@ Range.prototype.parseRange = function(range) {
     set = range.split(' ').map((comp) => parseComparator(comp, this.options)).join(' ').split(/\s+/);
   this.options.loose && (set = set.filter((comp) => !!comp.match(compRe)));
 
-  return (set = set.map((comp) => new Comparator(comp, this.options)));
+  return set.map((comp) => new Comparator(comp, this.options));
 };
 
 Range.prototype.intersects = function(range, options) {

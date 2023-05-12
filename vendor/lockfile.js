@@ -461,34 +461,32 @@ var Type = __webpack_require__(899),
 function resolveYamlBinary(data) {
   if (null === data) return false;
 
-  var code, idx, bitlen = 0, max = data.length, map = BASE64_MAP;
-
+  var code, idx, bitlen = 0, max = data.length;
   for (idx = 0; idx < max; idx++)
-    if ((code = map.indexOf(data.charAt(idx))) <= 64) {
+    if ((code = BASE64_MAP.indexOf(data.charAt(idx))) <= 64) {
       if (code < 0) return false;
 
       bitlen += 6;
     }
 
-  return bitlen % 8 == 0;
+  return bitlen % 8 === 0;
 }
 
 function constructYamlBinary(data) {
   var idx, tailbits,
     input = data.replace(/[\r\n=]/g, ''),
     max = input.length,
-    map = BASE64_MAP,
     bits = 0,
     result = [];
 
   for (idx = 0; idx < max; idx++) {
-    if (idx % 4 == 0 && idx) {
+    if (idx % 4 === 0 && idx) {
       result.push((bits >> 16) & 0xFF);
       result.push((bits >> 8) & 0xFF);
       result.push(0xFF & bits);
     }
 
-    bits = (bits << 6) | map.indexOf(input.charAt(idx));
+    bits = (bits << 6) | BASE64_MAP.indexOf(input.charAt(idx));
   }
 
   if (0 === (tailbits = (max % 4) * 6)) {
@@ -509,7 +507,7 @@ function representYamlBinary(object) {
     map = BASE64_MAP;
 
   for (idx = 0; idx < max; idx++) {
-    if (idx % 3 == 0 && idx) {
+    if (idx % 3 === 0 && idx) {
       result += map[(bits >> 18) & 0x3F];
       result += map[(bits >> 12) & 0x3F];
       result += map[(bits >> 6) & 0x3F];
@@ -599,7 +597,7 @@ function constructYamlFloat(data) {
 
   if (value.indexOf(':') >= 0) {
     value.split(':').forEach(function(v) {
-      digits.unshift(parseFloat(v, 10));
+      digits.unshift(parseFloat(v));
     });
 
     value = 0.0;
@@ -612,7 +610,7 @@ function constructYamlFloat(data) {
 
     return sign * value;
   }
-  return sign * parseFloat(value, 10);
+  return sign * parseFloat(value);
 }
 
 var SCIENTIFIC_WITHOUT_DOT = /^[-+]?[0-9]+e/;
@@ -650,7 +648,7 @@ module.exports = new Type('tag:yaml.org,2002:float', {
   construct: constructYamlFloat,
   predicate: (object) => (
     '[object Number]' === Object.prototype.toString.call(object) &&
-    (object % 1 != 0 || common.isNegativeZero(object))
+    (object % 1 !== 0 || common.isNegativeZero(object))
   ),
   represent: representYamlFloat,
   defaultStyle: 'lowercase'
@@ -772,7 +770,7 @@ module.exports = new Type('tag:yaml.org,2002:int', {
   construct: constructYamlInteger,
   predicate: (object) => (
     '[object Number]' === Object.prototype.toString.call(object) &&
-    object % 1 == 0 &&
+    object % 1 === 0 &&
     !common.isNegativeZero(object)
   ),
   represent: {
@@ -1064,9 +1062,9 @@ var common = __webpack_require__(596),
   PATTERN_NON_PRINTABLE =
     /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x84\x86-\x9F\uFFFE\uFFFF]|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?:[^\uD800-\uDBFF]|^)[\uDC00-\uDFFF]/,
   PATTERN_NON_ASCII_LINE_BREAKS = /[\x85\u2028\u2029]/,
-  PATTERN_FLOW_INDICATORS = /[,\[\]\{\}]/,
+  PATTERN_FLOW_INDICATORS = /[,\[\]{}]/,
   PATTERN_TAG_HANDLE = /^(?:!|!!|![a-z\-]+!)$/i,
-  PATTERN_TAG_URI = /^(?:!|[^,\[\]\{\}])(?:%[0-9a-f]{2}|[0-9a-z\-#;\/\?:@&=\+\$,_\.!~\*'\(\)\[\]])*$/i;
+  PATTERN_TAG_URI = /^(?:!|[^,\[\]{}])(?:%[0-9a-f]{2}|[0-9a-z\-#;\/?:@&=+$,_.!~*'()\[\]])*$/i;
 
 function _class(obj) {
   return Object.prototype.toString.call(obj);

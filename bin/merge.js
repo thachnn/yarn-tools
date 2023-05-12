@@ -30,7 +30,7 @@ program
  * @param {string} file1
  * @param {string} file2
  * @param {string[]} [fileN]
- * @param {program.Command} opts
+ * @param {{loose?: boolean, output?: string}} opts
  * @returns {Promise}
  */
 function main(file1, file2, fileN, opts) {
@@ -63,7 +63,7 @@ function parseLockfile(file) {
       if (err) reject(err);
       else {
         var result = lockfile.parse(content);
-        'conflict' == result.type ? reject(new Error('Bad lockfile: ' + file)) : resolve(result.object);
+        'conflict' === result.type ? reject(new Error('Bad lockfile: ' + file)) : resolve(result.object);
       }
     });
   });

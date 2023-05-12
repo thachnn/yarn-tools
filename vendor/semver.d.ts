@@ -164,7 +164,7 @@ export function rcompareIdentifiers(a: string | null | undefined, b: string | nu
  *
  * @since 6.1.0
  */
-export function compareBuild(a: string | SemVer, b: string | SemVer): 1 | 0 | -1;
+export function compareBuild(a: string | SemVer, b: string | SemVer, optionsOrLoose?: boolean | Options): 1 | 0 | -1;
 
 /**
  * Sorts an array of semver entries in ascending order using `compareBuild()`.

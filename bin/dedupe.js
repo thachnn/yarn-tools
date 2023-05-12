@@ -37,7 +37,7 @@ program
 
 /**
  * @param {string} [file]
- * @param {program.Command} opts
+ * @param {{strategy: string, list?: (boolean|string), fail?: boolean, packages?: string[], exclude?: string[], scopes?: string[], excludeScopes?: string[], print?: boolean, loose?: boolean, includePrerelease?: boolean}} opts
  */
 function main(file, opts) {
   !file && (file = 'yarn.lock');
@@ -60,21 +60,24 @@ function main(file, opts) {
 
     !opts.fail || duplicates.length === 0 || exitFailure();
   } else {
-    var deduped = dedupe.fixDuplicates(yarnLock, options);
+    var deduplicated = dedupe.fixDuplicates(yarnLock, options);
 
     if (opts.print) {
-      console.log(deduped);
+      console.log(deduplicated);
     } else {
       var eol = yarnLock.match(/\r?\n/);
-      !eol || eol[0] === '\n' || (deduped = deduped.replace(/\n/g, '\r\n'));
+      !eol || eol[0] === '\n' || (deduplicated = deduplicated.replace(/\n/g, '\r\n'));
 
-      deduped === yarnLock || fs.writeFileSync(file, deduped);
+      deduplicated === yarnLock || fs.writeFileSync(file, deduplicated);
     }
 
-    !opts.fail || deduped === yarnLock || exitFailure();
+    !opts.fail || deduplicated === yarnLock || exitFailure();
   }
 }
 
+/**
+ * @param {string} [msg]
+ */
 function exitFailure(msg) {
   console.error(msg || '\nerror: Duplicated entries found.');
   process.exit(1);
