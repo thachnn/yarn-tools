@@ -4,6 +4,7 @@
   "description": "Command line tools for Yarn lockfile processing, e.g. yarn-merge, yarn-safe-install,...",
   "main": "lib/index.js",
   "bin": {
+    "yarn-dedupe": "bin/dedupe.js",
     "yarn-merge": "bin/merge.js"
   },
   "directories": {
@@ -24,6 +25,9 @@
     "lockfile",
     "tools",
     "merge",
+    "duplicated",
+    "dedupe",
+    "deduplicate",
     "safe-install"
   ],
   "author": "Thach Nguyen (https://github.com/thachnn)",
