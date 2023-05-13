@@ -43,6 +43,7 @@ function main(file, opts) {
   !file && (file = 'yarn.lock');
   var yarnLock = fs.readFileSync(file, 'utf8');
 
+  /** @type {dedupe.Options} */
   var options = {
     useMostCommon: opts.strategy === 'fewer',
     includePackages: opts.packages,
@@ -54,7 +55,8 @@ function main(file, opts) {
   };
 
   if (opts.list) {
-    // TODO: options.listMagic
+    true === opts.list || (options.listMagic = opts.list);
+
     var duplicates = dedupe.listDuplicates(yarnLock, options);
     duplicates.forEach((line) => console.log(line));
 
