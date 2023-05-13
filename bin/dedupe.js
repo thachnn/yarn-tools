@@ -43,7 +43,6 @@ function main(file, opts) {
   !file && (file = 'yarn.lock');
   var yarnLock = fs.readFileSync(file, 'utf8');
 
-  /** @type {dedupe.Options} */
   var options = {
     useMostCommon: opts.strategy === 'fewer',
     includePackages: opts.packages,

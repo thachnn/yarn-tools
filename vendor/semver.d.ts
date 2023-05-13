@@ -9,7 +9,7 @@
 
 export const SEMVER_SPEC_VERSION: '2.0.0';
 
-export type ReleaseType = 'major' | 'premajor' | 'minor' | 'preminor' | 'patch' | 'prepatch' | 'prerelease';
+export type ReleaseType = 'major' | 'premajor' | 'minor' | 'preminor' | 'patch' | 'prepatch' | 'pre' | 'prerelease';
 
 export interface Options {
   loose?: boolean | undefined;

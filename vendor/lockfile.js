@@ -615,7 +615,7 @@ function constructYamlFloat(data) {
 
 var SCIENTIFIC_WITHOUT_DOT = /^[-+]?[0-9]+e/;
 
-function representYamlFloat(object, style) {
+function representYamlFloat(/**Number*/ object, style) {
   var res;
   if (isNaN(object))
     switch (style) {
@@ -774,10 +774,10 @@ module.exports = new Type('tag:yaml.org,2002:int', {
     !common.isNegativeZero(object)
   ),
   represent: {
-    binary: (obj) => (obj >= 0 ? '0b' + obj.toString(2) : '-0b' + obj.toString(2).slice(1)),
-    octal: (obj) => (obj >= 0 ? '0' + obj.toString(8) : '-0' + obj.toString(8).slice(1)),
-    decimal: (obj) => obj.toString(10),
-    hexadecimal: (obj) =>
+    binary: (/**Number*/ obj) => (obj >= 0 ? '0b' + obj.toString(2) : '-0b' + obj.toString(2).slice(1)),
+    octal: (/**Number*/ obj) => (obj >= 0 ? '0' + obj.toString(8) : '-0' + obj.toString(8).slice(1)),
+    decimal: (/**Number*/ obj) => obj.toString(10),
+    hexadecimal: (/**Number*/ obj) =>
       obj >= 0 ? '0x' + obj.toString(16).toUpperCase() : '-0x' + obj.toString(16).toUpperCase().slice(1)
   },
   defaultStyle: 'decimal',

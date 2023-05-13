@@ -20,11 +20,11 @@ program
     file2: 'the second lockfile',
     fileN: 'other lockfiles',
   })
-  .option('-l, --loose', 'interpret version comparisons loosely')
   .option('-o, --output <file>', 'save output to file (default STDOUT)')
+  .option('-l, --loose', 'interpret version comparisons loosely')
   .action(main)
   .parseAsync(process.argv)
-  .catch(console.error);
+  .catch((e) => (console.error(e), process.exit(1)));
 
 /**
  * @param {string} file1

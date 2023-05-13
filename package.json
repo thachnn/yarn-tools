@@ -5,7 +5,8 @@
   "main": "lib/index.js",
   "bin": {
     "yarn-dedupe": "bin/dedupe.js",
-    "yarn-merge": "bin/merge.js"
+    "yarn-merge": "bin/merge.js",
+    "yarn-safe-install": "bin/install.js"
   },
   "directories": {
     "bin": "bin",
@@ -21,14 +22,17 @@
   "repository": "thachnn/yarn-tools",
   "keywords": [
     "yarn",
-    "yarn.lock",
+    "lock",
     "lockfile",
     "tools",
     "merge",
     "duplicated",
     "dedupe",
     "deduplicate",
-    "safe-install"
+    "safe",
+    "safety",
+    "install",
+    "update"
   ],
   "author": "Thach Nguyen (https://github.com/thachnn)",
   "license": "MIT",
