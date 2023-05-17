@@ -1,3 +1,5 @@
+'use strict';
+
 var EventEmitter = require('events').EventEmitter,
   spawn = require('child_process').spawn,
   path = require('path'),

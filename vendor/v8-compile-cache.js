@@ -6,6 +6,7 @@ var Module = require('module'),
   path = require('path'),
   vm = require('vm'),
   os = require('os'),
+  mkdirpSync = require('./mkdirp').sync,
 
   hasOwnProperty = Object.prototype.hasOwnProperty;
 
@@ -205,29 +206,6 @@ class NativeCompileCache {
   }
 }
 
-function mkdirpSync(p_) {
-  _mkdirpSync(path.resolve(p_), 0o777);
-}
-
-function _mkdirpSync(p, mode) {
-  try {
-    fs.mkdirSync(p, mode);
-  } catch (err0) {
-    if ('ENOENT' === err0.code) {
-      _mkdirpSync(path.dirname(p));
-      _mkdirpSync(p);
-    } else {
-      var stat;
-      try {
-        stat = fs.statSync(p);
-      } catch (err1) {
-        throw err0;
-      }
-      if (!stat.isDirectory()) throw err0;
-    }
-  }
-}
-
 function slashEscape(str) {
   var ESCAPE_LOOKUP = {'\\': 'zB', ':': 'zC', '/': 'zS', '\0': 'z0', z: 'zZ'};
   return str.replace(/[\\:/\x00z]/g, (match) => ESCAPE_LOOKUP[match]);
@@ -276,7 +254,6 @@ if (!process.env.DISABLE_V8_COMPILE_CACHE && supportsCachedData()) {
 module.exports.__TEST__ = {
   FileSystemBlobStore,
   NativeCompileCache,
-  mkdirpSync,
   slashEscape,
   supportsCachedData,
   getCacheDir,
