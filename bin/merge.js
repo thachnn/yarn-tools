@@ -24,7 +24,7 @@ program
   .option('-l, --loose', 'interpret version comparisons loosely')
   .action(main)
   .parseAsync(process.argv)
-  .catch((e) => (console.error(e), process.exit(1)));
+  .then(process.exit, (e) => process.exit(console.error(e) || 1));
 
 /**
  * @param {string} file1

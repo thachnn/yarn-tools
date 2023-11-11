@@ -14,142 +14,82 @@ var MAX_LENGTH = 256,
   MAX_SAFE_INTEGER = Number.MAX_SAFE_INTEGER || 9007199254740991,
   MAX_SAFE_COMPONENT_LENGTH = 16,
 
-  re = (exports.re = []),
-  src = (exports.src = []),
-  /** @type {Object.<string, number>} */
-  t = (exports.tokens = {}),
-  R = 0;
+  /** @type {Object.<string, RegExp>} */
+  re = (exports.re = {}),
+  src = (exports.src = {});
 
-function tok(n) {
-  t[n] = R++;
-}
+src.NUMERICIDENTIFIER = '0|[1-9]\\d*';
+src.NUMERICIDENTIFIERLOOSE = '[0-9]+';
 
-tok('NUMERICIDENTIFIER');
-src[t.NUMERICIDENTIFIER] = '0|[1-9]\\d*';
-tok('NUMERICIDENTIFIERLOOSE');
-src[t.NUMERICIDENTIFIERLOOSE] = '[0-9]+';
+src.NONNUMERICIDENTIFIER = '\\d*[a-zA-Z-][a-zA-Z0-9-]*';
 
-tok('NONNUMERICIDENTIFIER');
-src[t.NONNUMERICIDENTIFIER] = '\\d*[a-zA-Z-][a-zA-Z0-9-]*';
+src.MAINVERSION = `(${src.NUMERICIDENTIFIER})\\.(${src.NUMERICIDENTIFIER})\\.(${src.NUMERICIDENTIFIER})`;
+src.MAINVERSIONLOOSE = `(${src.NUMERICIDENTIFIERLOOSE})\\.(${src.NUMERICIDENTIFIERLOOSE})\\.(${src.NUMERICIDENTIFIERLOOSE})`;
 
-tok('MAINVERSION');
-src[t.MAINVERSION] = `(${src[t.NUMERICIDENTIFIER]})\\.(${src[t.NUMERICIDENTIFIER]})\\.(${src[t.NUMERICIDENTIFIER]})`;
+src.PRERELEASEIDENTIFIER = `(?:${src.NUMERICIDENTIFIER}|${src.NONNUMERICIDENTIFIER})`;
+src.PRERELEASEIDENTIFIERLOOSE = `(?:${src.NUMERICIDENTIFIERLOOSE}|${src.NONNUMERICIDENTIFIER})`;
 
-tok('MAINVERSIONLOOSE');
-src[t.MAINVERSIONLOOSE] =
-  `(${src[t.NUMERICIDENTIFIERLOOSE]})\\.(${src[t.NUMERICIDENTIFIERLOOSE]})\\.(${src[t.NUMERICIDENTIFIERLOOSE]})`;
+src.PRERELEASE = `(?:-(${src.PRERELEASEIDENTIFIER}(?:\\.${src.PRERELEASEIDENTIFIER})*))`;
+src.PRERELEASELOOSE = `(?:-?(${src.PRERELEASEIDENTIFIERLOOSE}(?:\\.${src.PRERELEASEIDENTIFIERLOOSE})*))`;
 
-tok('PRERELEASEIDENTIFIER');
-src[t.PRERELEASEIDENTIFIER] = `(?:${src[t.NUMERICIDENTIFIER]}|${src[t.NONNUMERICIDENTIFIER]})`;
+src.BUILDIDENTIFIER = '[0-9A-Za-z-]+';
+src.BUILD = `(?:\\+(${src.BUILDIDENTIFIER}(?:\\.${src.BUILDIDENTIFIER})*))`;
 
-tok('PRERELEASEIDENTIFIERLOOSE');
-src[t.PRERELEASEIDENTIFIERLOOSE] = `(?:${src[t.NUMERICIDENTIFIERLOOSE]}|${src[t.NONNUMERICIDENTIFIER]})`;
+src.FULLPLAIN = `v?${src.MAINVERSION}${src.PRERELEASE}?${src.BUILD}?`;
+src.FULL = `^${src.FULLPLAIN}$`;
 
-tok('PRERELEASE');
-src[t.PRERELEASE] = `(?:-(${src[t.PRERELEASEIDENTIFIER]}(?:\\.${src[t.PRERELEASEIDENTIFIER]})*))`;
+src.LOOSEPLAIN = `[v=\\s]*${src.MAINVERSIONLOOSE}${src.PRERELEASELOOSE}?${src.BUILD}?`;
+src.LOOSE = `^${src.LOOSEPLAIN}$`;
 
-tok('PRERELEASELOOSE');
-src[t.PRERELEASELOOSE] = `(?:-?(${src[t.PRERELEASEIDENTIFIERLOOSE]}(?:\\.${src[t.PRERELEASEIDENTIFIERLOOSE]})*))`;
+src.GTLT = '((?:<|>)?=?)';
 
-tok('BUILDIDENTIFIER');
-src[t.BUILDIDENTIFIER] = '[0-9A-Za-z-]+';
+src.XRANGEIDENTIFIERLOOSE = src.NUMERICIDENTIFIERLOOSE + '|x|X|\\*';
+src.XRANGEIDENTIFIER = src.NUMERICIDENTIFIER + '|x|X|\\*';
 
-tok('BUILD');
-src[t.BUILD] = `(?:\\+(${src[t.BUILDIDENTIFIER]}(?:\\.${src[t.BUILDIDENTIFIER]})*))`;
+src.XRANGEPLAIN = `[v=\\s]*(${src.XRANGEIDENTIFIER})(?:\\.(${src.XRANGEIDENTIFIER})(?:\\.(${src.XRANGEIDENTIFIER})(?:${src.PRERELEASE})?${src.BUILD}?)?)?`;
+src.XRANGEPLAINLOOSE = `[v=\\s]*(${src.XRANGEIDENTIFIERLOOSE})(?:\\.(${src.XRANGEIDENTIFIERLOOSE})(?:\\.(${src.XRANGEIDENTIFIERLOOSE})(?:${src.PRERELEASELOOSE})?${src.BUILD}?)?)?`;
 
-tok('FULL');
-tok('FULLPLAIN');
-src[t.FULLPLAIN] = `v?${src[t.MAINVERSION]}${src[t.PRERELEASE]}?${src[t.BUILD]}?`;
+src.XRANGE = `^${src.GTLT}\\s*${src.XRANGEPLAIN}$`;
+src.XRANGELOOSE = `^${src.GTLT}\\s*${src.XRANGEPLAINLOOSE}$`;
 
-src[t.FULL] = `^${src[t.FULLPLAIN]}$`;
+src.COERCE = `(^|[^\\d])(\\d{1,${MAX_SAFE_COMPONENT_LENGTH}})(?:\\.(\\d{1,${MAX_SAFE_COMPONENT_LENGTH}}))?(?:\\.(\\d{1,${MAX_SAFE_COMPONENT_LENGTH}}))?(?:$|[^\\d])`;
 
-tok('LOOSEPLAIN');
-src[t.LOOSEPLAIN] = `[v=\\s]*${src[t.MAINVERSIONLOOSE]}${src[t.PRERELEASELOOSE]}?${src[t.BUILD]}?`;
+re.COERCERTL = new RegExp(src.COERCE, 'g');
 
-tok('LOOSE');
-src[t.LOOSE] = `^${src[t.LOOSEPLAIN]}$`;
+src.LONETILDE = '(?:~>?)';
 
-tok('GTLT');
-src[t.GTLT] = '((?:<|>)?=?)';
-
-tok('XRANGEIDENTIFIERLOOSE');
-src[t.XRANGEIDENTIFIERLOOSE] = src[t.NUMERICIDENTIFIERLOOSE] + '|x|X|\\*';
-tok('XRANGEIDENTIFIER');
-src[t.XRANGEIDENTIFIER] = src[t.NUMERICIDENTIFIER] + '|x|X|\\*';
-
-tok('XRANGEPLAIN');
-src[t.XRANGEPLAIN] = `[v=\\s]*(${src[t.XRANGEIDENTIFIER]})(?:\\.(${src[t.XRANGEIDENTIFIER]})(?:\\.(${
-  src[t.XRANGEIDENTIFIER]
-})(?:${src[t.PRERELEASE]})?${src[t.BUILD]}?)?)?`;
-
-tok('XRANGEPLAINLOOSE');
-src[t.XRANGEPLAINLOOSE] = `[v=\\s]*(${src[t.XRANGEIDENTIFIERLOOSE]})(?:\\.(${src[t.XRANGEIDENTIFIERLOOSE]})(?:\\.(${
-  src[t.XRANGEIDENTIFIERLOOSE]
-})(?:${src[t.PRERELEASELOOSE]})?${src[t.BUILD]}?)?)?`;
-
-tok('XRANGE');
-src[t.XRANGE] = `^${src[t.GTLT]}\\s*${src[t.XRANGEPLAIN]}$`;
-tok('XRANGELOOSE');
-src[t.XRANGELOOSE] = `^${src[t.GTLT]}\\s*${src[t.XRANGEPLAINLOOSE]}$`;
-
-tok('COERCE');
-src[t.COERCE] = `(^|[^\\d])(\\d{1,${MAX_SAFE_COMPONENT_LENGTH}})(?:\\.(\\d{1,${
-  MAX_SAFE_COMPONENT_LENGTH
-}}))?(?:\\.(\\d{1,${MAX_SAFE_COMPONENT_LENGTH}}))?(?:$|[^\\d])`;
-
-tok('COERCERTL');
-re[t.COERCERTL] = new RegExp(src[t.COERCE], 'g');
-
-tok('LONETILDE');
-src[t.LONETILDE] = '(?:~>?)';
-
-tok('TILDETRIM');
-src[t.TILDETRIM] = `(\\s*)${src[t.LONETILDE]}\\s+`;
-re[t.TILDETRIM] = new RegExp(src[t.TILDETRIM], 'g');
+src.TILDETRIM = `(\\s*)${src.LONETILDE}\\s+`;
+re.TILDETRIM = new RegExp(src.TILDETRIM, 'g');
 var tildeTrimReplace = '$1~';
 
-tok('TILDE');
-src[t.TILDE] = `^${src[t.LONETILDE]}${src[t.XRANGEPLAIN]}$`;
-tok('TILDELOOSE');
-src[t.TILDELOOSE] = `^${src[t.LONETILDE]}${src[t.XRANGEPLAINLOOSE]}$`;
+src.TILDE = `^${src.LONETILDE}${src.XRANGEPLAIN}$`;
+src.TILDELOOSE = `^${src.LONETILDE}${src.XRANGEPLAINLOOSE}$`;
 
-tok('LONECARET');
-src[t.LONECARET] = '(?:\\^)';
+src.LONECARET = '(?:\\^)';
 
-tok('CARETTRIM');
-src[t.CARETTRIM] = `(\\s*)${src[t.LONECARET]}\\s+`;
-re[t.CARETTRIM] = new RegExp(src[t.CARETTRIM], 'g');
+src.CARETTRIM = `(\\s*)${src.LONECARET}\\s+`;
+re.CARETTRIM = new RegExp(src.CARETTRIM, 'g');
 var caretTrimReplace = '$1^';
 
-tok('CARET');
-src[t.CARET] = `^${src[t.LONECARET]}${src[t.XRANGEPLAIN]}$`;
-tok('CARETLOOSE');
-src[t.CARETLOOSE] = `^${src[t.LONECARET]}${src[t.XRANGEPLAINLOOSE]}$`;
+src.CARET = `^${src.LONECARET}${src.XRANGEPLAIN}$`;
+src.CARETLOOSE = `^${src.LONECARET}${src.XRANGEPLAINLOOSE}$`;
 
-tok('COMPARATORLOOSE');
-src[t.COMPARATORLOOSE] = `^${src[t.GTLT]}\\s*(${src[t.LOOSEPLAIN]})$|^$`;
-tok('COMPARATOR');
-src[t.COMPARATOR] = `^${src[t.GTLT]}\\s*(${src[t.FULLPLAIN]})$|^$`;
+src.COMPARATORLOOSE = `^${src.GTLT}\\s*(${src.LOOSEPLAIN})$|^$`;
+src.COMPARATOR = `^${src.GTLT}\\s*(${src.FULLPLAIN})$|^$`;
 
-tok('COMPARATORTRIM');
-src[t.COMPARATORTRIM] = `(\\s*)${src[t.GTLT]}\\s*(${src[t.LOOSEPLAIN]}|${src[t.XRANGEPLAIN]})`;
-
-re[t.COMPARATORTRIM] = new RegExp(src[t.COMPARATORTRIM], 'g');
+src.COMPARATORTRIM = `(\\s*)${src.GTLT}\\s*(${src.LOOSEPLAIN}|${src.XRANGEPLAIN})`;
+re.COMPARATORTRIM = new RegExp(src.COMPARATORTRIM, 'g');
 var comparatorTrimReplace = '$1$2$3';
 
-tok('HYPHENRANGE');
-src[t.HYPHENRANGE] = `^\\s*(${src[t.XRANGEPLAIN]})\\s+-\\s+(${src[t.XRANGEPLAIN]})\\s*$`;
+src.HYPHENRANGE = `^\\s*(${src.XRANGEPLAIN})\\s+-\\s+(${src.XRANGEPLAIN})\\s*$`;
+src.HYPHENRANGELOOSE = `^\\s*(${src.XRANGEPLAINLOOSE})\\s+-\\s+(${src.XRANGEPLAINLOOSE})\\s*$`;
 
-tok('HYPHENRANGELOOSE');
-src[t.HYPHENRANGELOOSE] = `^\\s*(${src[t.XRANGEPLAINLOOSE]})\\s+-\\s+(${src[t.XRANGEPLAINLOOSE]})\\s*$`;
+src.STAR = '(<|>)?=?\\s*\\*';
 
-tok('STAR');
-src[t.STAR] = '(<|>)?=?\\s*\\*';
-
-for (var i = 0; i < R; i++) {
-  debug(i, src[i]);
+Object.keys(src).forEach((i, j) => {
+  debug(j, i, src[i]);
   re[i] || (re[i] = new RegExp(src[i]));
-}
+});
 
 exports.parse = parse;
 function parse(version, options) {
@@ -159,11 +99,11 @@ function parse(version, options) {
   if ('string' != typeof version) return null;
   if (version.length > MAX_LENGTH) return null;
 
-  if (!(options.loose ? re[t.LOOSE] : re[t.FULL]).test(version)) return null;
+  if (!(options.loose ? re.LOOSE : re.FULL).test(version)) return null;
 
   try {
     return new SemVer(version, options);
-  } catch (er) {
+  } catch (_) {
     return null;
   }
 }
@@ -196,7 +136,7 @@ function SemVer(version, options) {
   this.options = options;
   this.loose = !!options.loose;
 
-  var m = version.trim().match(options.loose ? re[t.LOOSE] : re[t.FULL]);
+  var m = version.trim().match(options.loose ? re.LOOSE : re.FULL);
   if (!m) throw new TypeError('Invalid Version: ' + version);
 
   this.raw = version;
@@ -254,8 +194,7 @@ SemVer.prototype.comparePre = function(other) {
   if (!this.prerelease.length && other.prerelease.length) return 1;
   if (!this.prerelease.length && !other.prerelease.length) return 0;
 
-  var i = 0;
-  do {
+  for (var i = 0; ; i++) {
     var a = this.prerelease[i],
       b = other.prerelease[i];
     debug('prerelease compare', i, a, b);
@@ -263,14 +202,13 @@ SemVer.prototype.comparePre = function(other) {
     if (void 0 === b) return 1;
     if (void 0 === a) return -1;
     if (a !== b) return compareIdentifiers(a, b);
-  } while (++i);
+  }
 };
 
 SemVer.prototype.compareBuild = function(other) {
   other instanceof SemVer || (other = new SemVer(other, this.options));
 
-  var i = 0;
-  do {
+  for (var i = 0; ; i++) {
     var a = this.build[i],
       b = other.build[i];
     debug('prerelease compare', i, a, b);
@@ -278,7 +216,7 @@ SemVer.prototype.compareBuild = function(other) {
     if (void 0 === b) return 1;
     if (void 0 === a) return -1;
     if (a !== b) return compareIdentifiers(a, b);
-  } while (++i);
+  }
 };
 
 SemVer.prototype.inc = function(release, identifier) {
@@ -354,7 +292,7 @@ function inc(version, release, loose, identifier) {
 
   try {
     return new SemVer(version, loose).inc(release, identifier).version;
-  } catch (er) {
+  } catch (_) {
     return null;
   }
 }
@@ -511,7 +449,7 @@ function Comparator(comp, options) {
 
 var ANY = {};
 Comparator.prototype.parse = function(comp) {
-  var r = this.options.loose ? re[t.COMPARATORLOOSE] : re[t.COMPARATOR],
+  var r = this.options.loose ? re.COMPARATORLOOSE : re.COMPARATOR,
     m = comp.match(r);
 
   if (!m) throw new TypeError('Invalid comparator: ' + comp);
@@ -534,7 +472,7 @@ Comparator.prototype.test = function(version) {
   if ('string' == typeof version)
     try {
       version = new SemVer(version, this.options);
-    } catch (er) {
+    } catch (_) {
       return false;
     }
 
@@ -621,17 +559,17 @@ Range.prototype.toString = function() {
 Range.prototype.parseRange = function(range) {
   var loose = this.options.loose;
   range = range.trim();
-  var hr = loose ? re[t.HYPHENRANGELOOSE] : re[t.HYPHENRANGE];
+  var hr = loose ? re.HYPHENRANGELOOSE : re.HYPHENRANGE;
   range = range.replace(hr, hyphenReplace);
   debug('hyphen replace', range);
-  range = range.replace(re[t.COMPARATORTRIM], comparatorTrimReplace);
-  debug('comparator trim', range, re[t.COMPARATORTRIM]);
+  range = range.replace(re.COMPARATORTRIM, comparatorTrimReplace);
+  debug('comparator trim', range, re.COMPARATORTRIM);
 
-  range = range.replace(re[t.TILDETRIM], tildeTrimReplace)
-    .replace(re[t.CARETTRIM], caretTrimReplace)
+  range = range.replace(re.TILDETRIM, tildeTrimReplace)
+    .replace(re.CARETTRIM, caretTrimReplace)
     .split(/\s+/).join(' ');
 
-  var compRe = loose ? re[t.COMPARATORLOOSE] : re[t.COMPARATOR],
+  var compRe = loose ? re.COMPARATORLOOSE : re.COMPARATOR,
     set = range.split(' ').map((comp) => parseComparator(comp, this.options)).join(' ').split(/\s+/);
   this.options.loose && (set = set.filter((comp) => !!comp.match(compRe)));
 
@@ -698,7 +636,7 @@ function replaceTildes(comp, options) {
 }
 
 function replaceTilde(comp, options) {
-  var r = options.loose ? re[t.TILDELOOSE] : re[t.TILDE];
+  var r = options.loose ? re.TILDELOOSE : re.TILDE;
   return comp.replace(r, function(_, M, m, p, pr) {
     debug('tilde', comp, _, M, m, p, pr);
     var ret;
@@ -722,7 +660,7 @@ function replaceCarets(comp, options) {
 
 function replaceCaret(comp, options) {
   debug('caret', comp, options);
-  var r = options.loose ? re[t.CARETLOOSE] : re[t.CARET];
+  var r = options.loose ? re.CARETLOOSE : re.CARET;
   return comp.replace(r, function(_, M, m, p, pr) {
     debug('caret', comp, _, M, m, p, pr);
     var ret;
@@ -758,7 +696,7 @@ function replaceXRanges(comp, options) {
 
 function replaceXRange(comp, options) {
   comp = comp.trim();
-  var r = options.loose ? re[t.XRANGELOOSE] : re[t.XRANGE];
+  var r = options.loose ? re.XRANGELOOSE : re.XRANGE;
   return comp.replace(r, function(ret, gtlt, M, m, p, pr) {
     debug('xRange', comp, ret, gtlt, M, m, p, pr);
     var xM = isX(M),
@@ -802,7 +740,7 @@ function replaceXRange(comp, options) {
 
 function replaceStars(comp, options) {
   debug('replaceStars', comp, options);
-  return comp.trim().replace(re[t.STAR], '');
+  return comp.trim().replace(re.STAR, '');
 }
 
 function hyphenReplace($0, from, fM, fm, fp, fpr, fb, to, tM, tm, tp, tpr, tb) {
@@ -827,7 +765,7 @@ Range.prototype.test = function(version) {
   if ('string' == typeof version)
     try {
       version = new SemVer(version, this.options);
-    } catch (er) {
+    } catch (_) {
       return false;
     }
 
@@ -836,7 +774,8 @@ Range.prototype.test = function(version) {
 };
 
 function testSet(set, version, options) {
-  for (var i = 0; i < set.length; i++) if (!set[i].test(version)) return false;
+  var i;
+  for (i = 0; i < set.length; i++) if (!set[i].test(version)) return false;
 
   if (version.prerelease.length && !options.includePrerelease) {
     for (i = 0; i < set.length; i++) {
@@ -858,7 +797,7 @@ exports.satisfies = satisfies;
 function satisfies(version, range, options) {
   try {
     range = new Range(range, options);
-  } catch (er) {
+  } catch (_) {
     return false;
   }
   return range.test(version);
@@ -867,10 +806,11 @@ function satisfies(version, range, options) {
 exports.maxSatisfying = maxSatisfying;
 function maxSatisfying(versions, range, options) {
   var max = null,
-    maxSV = null;
+    maxSV = null,
+    rangeObj;
   try {
-    var rangeObj = new Range(range, options);
-  } catch (er) {
+    rangeObj = new Range(range, options);
+  } catch (_) {
     return null;
   }
   versions.forEach(function(v) {
@@ -882,10 +822,11 @@ function maxSatisfying(versions, range, options) {
 exports.minSatisfying = minSatisfying;
 function minSatisfying(versions, range, options) {
   var min = null,
-    minSV = null;
+    minSV = null,
+    rangeObj;
   try {
-    var rangeObj = new Range(range, options);
-  } catch (er) {
+    rangeObj = new Range(range, options);
+  } catch (_) {
     return null;
   }
   versions.forEach(function(v) {
@@ -932,7 +873,7 @@ exports.validRange = validRange;
 function validRange(range, options) {
   try {
     return new Range(range, options).range || '*';
-  } catch (er) {
+  } catch (_) {
     return null;
   }
 }
@@ -977,14 +918,15 @@ function outside(version, range, hilo, options) {
       high = null,
       low = null;
 
-    comparators.forEach(function(comparator) {
+    for (var comparator of comparators) {
       comparator.semver === ANY && (comparator = new Comparator('>=0.0.0'));
+
       high = high || comparator;
       low = low || comparator;
       gtfn(comparator.semver, high.semver, options)
         ? (high = comparator)
         : ltfn(comparator.semver, low.semver, options) && (low = comparator);
-    });
+    }
 
     if (high.operator === comp || high.operator === ecomp) return false;
 
@@ -1011,21 +953,20 @@ function coerce(version, options) {
   if (version instanceof SemVer) return version;
 
   'number' == typeof version && (version = String(version));
-
   if ('string' != typeof version) return null;
 
   var match = null;
-  if (!(options = options || {}).rtl) match = version.match(re[t.COERCE]);
+  if (!(options = options || {}).rtl) match = version.match(re.COERCE);
   else {
     for (
       var next;
-      (next = re[t.COERCERTL].exec(version)) && (!match || match.index + match[0].length !== version.length);
+      (next = re.COERCERTL.exec(version)) && (!match || match.index + match[0].length !== version.length);
     ) {
       (match && next.index + next[0].length === match.index + match[0].length) || (match = next);
-      re[t.COERCERTL].lastIndex = next.index + next[1].length + next[2].length;
+      re.COERCERTL.lastIndex = next.index + next[1].length + next[2].length;
     }
-    re[t.COERCERTL].lastIndex = -1;
+    re.COERCERTL.lastIndex = -1;
   }
 
-  return null === match ? null : parse(match[2] + '.' + (match[3] || '0') + '.' + (match[4] || '0'), options);
+  return null === match ? null : parse(`${match[2]}.${match[3] || '0'}.${match[4] || '0'}`, options);
 }

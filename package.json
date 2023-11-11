@@ -1,12 +1,12 @@
 {
   "name": "@nthachus/yarn-tools",
   "version": "1.0.0",
-  "description": "Command line tools for Yarn lockfile processing, e.g. yarn-merge, yarn-safe-install,...",
+  "description": "Command line tools for Yarn lockfile processing, e.g. yarn-merge, yarn-resolve,...",
   "main": "lib/index.js",
   "bin": {
     "yarn-dedupe": "bin/dedupe.js",
     "yarn-merge": "bin/merge.js",
-    "yarn-safe-install": "bin/install.js"
+    "yarn-resolve": "bin/install.js"
   },
   "directories": {
     "bin": "bin",

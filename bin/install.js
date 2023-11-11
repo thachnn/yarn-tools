@@ -12,7 +12,7 @@ var fs = require('fs'),
   version = require('../package.json').version;
 
 program
-  .name('yarn-safe-install')
+  .name('yarn-resolve')
   .version(version)
   .description('Resolve package dependencies safety into Yarn lockfile')
   .option('-o, --output <file>', 'output file', 'yarn.lock')
@@ -28,7 +28,7 @@ program
   .option('-p, --prerelease', 'include prereleases in version comparisons')
   .action(main)
   .parseAsync(process.argv)
-  .catch((e) => (console.error(e), process.exit(1)));
+  .then(process.exit, (e) => process.exit(console.error(e) || 1));
 
 /**
  * @param {{output: string, dev?: boolean, 'optional'?: boolean, limitDate: string, loose?: boolean, prerelease?: boolean}} opts
@@ -50,15 +50,20 @@ function main(opts) {
       return reject(err);
     }
 
-    var deps = Object.assign({}, opts.dev ? pkg.devDependencies : null, pkg.dependencies),
-      it = [],
+    var deps = Object.assign(
+      {},
+      opts.optional ? pkg.optionalDependencies : null,
+      opts.dev ? pkg.devDependencies : null,
+      pkg.dependencies
+    );
+    var it = [],
       obj = {},
       versions = {};
     for (var name in deps) it.push(install(obj, name, deps[name], opts.limitDate, versions, options));
 
     Promise.all(it).then((msg) => {
+      console.info(msg);
       try {
-        logMessages(msg);
         data = lockfile.stringify(obj);
       } catch (ex) {
         return reject(ex);
@@ -67,11 +72,4 @@ function main(opts) {
       fs.writeFile(opts.output, data, (er) => (!er ? resolve() : reject(er)));
     }, reject);
   });
-}
-
-/**
- * @param {Array|string} [msg]
- */
-function logMessages(msg) {
-  !msg || ('string' == typeof msg ? console.info(msg) : msg.forEach(logMessages));
 }
